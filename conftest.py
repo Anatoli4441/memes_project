@@ -1,31 +1,75 @@
 import pytest
-from endpoints.authorize import AuthorizeClient
-from endpoints.meme import MemeClient
-import requests
+from endpoints.do_post import DoPost
+from endpoints.do_get import DoGet
+from endpoints.do_put import DoPut
+from endpoints.do_delete import DoDelete
 
 
 @pytest.fixture(scope="session")
-def authorize_client():
-    client = AuthorizeClient()
-    client.authorize("Anatoliy")
-    return client
-
-
-@pytest.fixture(scope="session")
-def meme_client(authorize_client):
-    return MemeClient(authorize_client.token)
+def token():
+    do_post = DoPost()
+    response = do_post.authorize("Anatoliy")
+    return response.json()["token"]
 
 
 @pytest.fixture
-def created_meme(meme_client):
-    meme = meme_client.create_meme(
-        "Test Meme",
-        "http://example.com/test_meme.jpg",
-        ["test"],
-        {"colours": ["blue"]}
-    )
-    yield meme
-    try:
-        meme_client.delete_meme(meme["id"])
-    except requests.RequestException as e:
-        print(f"Failed to delete meme with ID {meme['id']}: {e}")
+def do_get(token):
+    return DoGet(token)
+
+
+@pytest.fixture
+def do_post(token):
+    return DoPost(token)
+
+
+@pytest.fixture
+def do_put(token):
+    return DoPut(token)
+
+
+@pytest.fixture
+def do_delete(token):
+    return DoDelete(token)
+
+
+@pytest.fixture
+def meme_data():
+    return {
+        "text": "Zoning Out Black Cat",
+        "url": "https://i.kym-cdn.com/entries/icons/original/000/045/575/blackcatzoningout_meme.jpg",
+        "tags": ["black", "cat"],
+        "info": {"colours": ["black", "red"]}
+    }
+
+
+@pytest.fixture
+def unauthorized_do_get():
+    return DoGet()
+
+
+@pytest.fixture
+def unauthorized_do_post():
+    return DoPost()
+
+
+@pytest.fixture
+def unauthorized_do_put():
+    return DoPut()
+
+
+@pytest.fixture
+def unauthorized_do_delete():
+    return DoDelete()
+
+
+@pytest.fixture
+def authorized_do_get(token):
+    return DoGet(token)
+
+
+@pytest.fixture
+def anatoliy_memes(authorized_do_get):
+    response = authorized_do_get.get_all_memes()
+    assert response.status_code == 200
+    memes = response.json().get('data', [])
+    return [meme for meme in memes if meme.get('updated_by') == 'Anatoliy']
