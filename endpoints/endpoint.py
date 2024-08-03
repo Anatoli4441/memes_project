@@ -14,20 +14,24 @@ class Endpoint:
 
     def post(self, path, data):
         url = f"{self.BASE_URL}{path}"
-        response = requests.post(url, json=data, headers=self._headers())
+        headers = self._headers()
+        response = requests.post(url, json=data, headers=headers)
         return response
 
     def get(self, path):
         url = f"{self.BASE_URL}{path}"
-        response = requests.get(url, headers=self._headers())
+        headers = self._headers()
+        response = requests.get(url, headers=headers)
         return response
 
     def put(self, path, data):
         url = f"{self.BASE_URL}{path}"
-        response = requests.put(url, json=data, headers=self._headers())
+        headers = self._headers()
+        response = requests.put(url, json=data, headers=headers)
         return response
 
     def delete(self, path):
         url = f"{self.BASE_URL}{path}"
-        response = requests.delete(url, headers=self._headers())
+        headers = self._headers()
+        response = requests.delete(url, headers=headers)
         return response

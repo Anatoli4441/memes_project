@@ -1,69 +1,69 @@
+
+
 class TestMemeAPI:
 
-    def test_authorization(self, do_post):
-        response = do_post.authorize("Anatoliy")
-        assert response.status_code == 200
+    def check_status_code(self, response, expected_status):
+        assert response.status_code == expected_status
+
+    def check_meme_data(self, meme, expected_data):
+        assert meme["text"] == expected_data["text"]
+        assert meme["url"] == expected_data["url"]
+        assert meme["tags"] == expected_data["tags"]
+        assert meme["info"] == expected_data["info"]
+
+    def test_authorization(self, authorization):
+        response = authorization.authorize("Anatoliy")
+        self.check_status_code(response, 200)
 
     def test_valid_token(self, do_get, token):
         response = do_get.check_token(token)
-        assert response.status_code == 200
+        self.check_status_code(response, 200)
 
     def test_get_all_memes(self, do_get):
         response = do_get.get_all_memes()
-        assert response.status_code == 200
+        self.check_status_code(response, 200)
 
-    def test_get_meme_by_id(self, do_post, do_get, meme_data):
-        response = do_post.add_meme(meme_data)
-        meme_id = response.json()["id"]
-
+    def test_get_meme_by_id(self, meme, do_get, meme_data):
+        meme_id = meme["id"]
         response = do_get.get_meme_by_id(meme_id)
-        assert response.status_code == 200
-        assert response.json()["text"] == meme_data["text"]
+        self.check_status_code(response, 200)
+        self.check_meme_data(response.json(), meme_data)
 
-    def test_add_meme(self, do_post, do_get, meme_data):
-        response = do_post.add_meme(meme_data)
-        assert response.status_code == 200
-        meme_id = response.json()["id"]
+    def test_add_meme(self, meme, meme_data):
+        self.check_meme_data(meme, meme_data)
 
-        response = do_get.get_meme_by_id(meme_id)
-        assert response.status_code == 200
-        assert response.json()["text"] == meme_data["text"]
-
-    def test_update_meme(self, do_post, do_put, do_get, meme_data):
-        response = do_post.add_meme(meme_data)
-        meme_id = response.json()["id"]
-
+    def test_update_meme(self, meme, do_put, do_get):
+        meme_id = meme["id"]
         updated_data = {
             "id": meme_id,
             "text": "I like the meme named Zoning Out Black Cat",
-            "url": meme_data["url"],
+            "url": meme["url"],
             "tags": ["black", "cat", "green eyes"],
             "info": {"colours": ["black", "red", "green"]}
         }
         response = do_put.update_meme(meme_id, updated_data)
-        assert response.status_code == 200
+        self.check_status_code(response, 200)
 
         response = do_get.get_meme_by_id(meme_id)
-        assert response.status_code == 200
-        assert response.json()["text"] == updated_data["text"]
+        self.check_status_code(response, 200)
+        self.check_meme_data(response.json(), updated_data)
 
-    def test_delete_meme(self, do_post, do_delete, do_get, meme_data):
-        response = do_post.add_meme(meme_data)
-        meme_id = response.json()["id"]
+    def test_delete_meme(self, meme, do_delete, do_get):
+        meme_id = meme["id"]
 
         response = do_delete.delete_meme(meme_id)
-        assert response.status_code == 200
+        self.check_status_code(response, 200)
 
         response = do_get.get_meme_by_id(meme_id)
-        assert response.status_code == 404
+        self.check_status_code(response, 404)
 
     def test_invalid_token(self, do_get):
         response = do_get.check_token("xsdsd232333")
-        assert response.status_code == 404
+        self.check_status_code(response, 404)
 
     def test_nonexistent_meme(self, do_get):
         response = do_get.get_meme_by_id("3234348949493x")
-        assert response.status_code == 404
+        self.check_status_code(response, 404)
 
     def test_add_meme_without_url(self, do_post):
         data = {
@@ -72,7 +72,7 @@ class TestMemeAPI:
             "info": {"colours": ["black", "red"]}
         }
         response = do_post.add_meme(data)
-        assert response.status_code == 400
+        self.check_status_code(response, 400)
 
     def test_update_meme_with_nonexistent_id(self, do_put):
         data = {
@@ -83,22 +83,19 @@ class TestMemeAPI:
             "info": {"colours": ["black", "red", "green"]}
         }
         response = do_put.update_meme("3234348949493x", data)
-        assert response.status_code == 404
+        self.check_status_code(response, 404)
 
-    def test_delete_meme_created_by_other_user(self, do_get, do_delete):
+    def test_delete_meme_created_by_other_user(self, do_get, do_delete, meme):
         response = do_get.get_all_memes()
-        assert response.status_code == 200
+        self.check_status_code(response, 200)
 
         memes = response.json().get('data', [])
-
-        assert isinstance(memes, list), "Expected list of memes"
-
         other_meme = next((m for m in memes if m.get('updated_by') != 'Anatoliy'), None)
         assert other_meme is not None, "No meme found created by another user"
 
         meme_id = other_meme["id"]
         response = do_delete.delete_meme(meme_id)
-        assert response.status_code == 403
+        self.check_status_code(response, 403)
 
     def test_add_meme_with_int_in_text(self, do_post):
         data = {
@@ -108,29 +105,27 @@ class TestMemeAPI:
             "info": {"colours": ["black", "red"]}
         }
         response = do_post.add_meme(data)
-        assert response.status_code == 400
+        self.check_status_code(response, 400)
 
     def test_add_meme_with_int_in_url(self, do_post):
         data = {
             "text": "Zoning Out Black Cat",
-            "url": 3,
+            "url": 3,  # Неверный тип данных (ожидается строка)
             "tags": ["black", "cat"],
             "info": {"colours": ["black", "red"]}
         }
         response = do_post.add_meme(data)
-        assert response.status_code == 400
+        self.check_status_code(response, 400)
 
-    def test_unauthorized_access(self, unauthorized_do_get, unauthorized_do_post,
-                                 unauthorized_do_put, unauthorized_do_delete, anatoliy_memes):
+    def test_unauthorized_access(self, unauthorized_do_get, unauthorized_do_post, unauthorized_do_put, unauthorized_do_delete, anatoliy_memes):
+        # Test unauthorized access to each endpoint
 
         response = unauthorized_do_get.get_all_memes()
-        assert response.status_code == 401
+        self.check_status_code(response, 401)
 
-        # GET /meme/<id>
         response = unauthorized_do_get.get_all_memes()
-        assert response.status_code == 401
+        self.check_status_code(response, 401)
 
-        # POST /meme
         data = {
             "text": "Zoning Out Black Cat",
             "url": "https://i.kym-cdn.com/entries/icons/original/000/045/575/blackcatzoningout_meme.jpg",
@@ -138,7 +133,7 @@ class TestMemeAPI:
             "info": {"colours": ["black", "red"]}
         }
         response = unauthorized_do_post.add_meme(data)
-        assert response.status_code == 401
+        self.check_status_code(response, 401)
 
         meme_to_update = next((m for m in anatoliy_memes), None)
         assert meme_to_update is not None, "No meme found created by Anatoliy"
@@ -151,8 +146,7 @@ class TestMemeAPI:
             "info": {"colours": ["black", "red", "green"]}
         }
         response = unauthorized_do_put.update_meme(meme_to_update["id"], updated_data)
-        assert response.status_code == 401
+        self.check_status_code(response, 401)
 
-        # DELETE /meme/<id>
         response = unauthorized_do_delete.delete_meme(meme_to_update["id"])
-        assert response.status_code == 401
+        self.check_status_code(response, 401)

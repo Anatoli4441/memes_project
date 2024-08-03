@@ -3,13 +3,19 @@ from endpoints.do_post import DoPost
 from endpoints.do_get import DoGet
 from endpoints.do_put import DoPut
 from endpoints.do_delete import DoDelete
+from endpoints.authorization import Authorization
 
 
 @pytest.fixture(scope="session")
 def token():
-    do_post = DoPost()
-    response = do_post.authorize("Anatoliy")
+    do_auth = Authorization()
+    response = do_auth.authorize("Anatoliy")
     return response.json()["token"]
+
+
+@pytest.fixture
+def authorization():
+    return Authorization()
 
 
 @pytest.fixture
@@ -40,6 +46,13 @@ def meme_data():
         "tags": ["black", "cat"],
         "info": {"colours": ["black", "red"]}
     }
+
+
+@pytest.fixture
+def meme(do_post, meme_data):
+    response = do_post.add_meme(meme_data)
+    assert response.status_code == 200
+    return response.json()
 
 
 @pytest.fixture
