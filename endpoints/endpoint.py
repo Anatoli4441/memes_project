@@ -35,3 +35,14 @@ class Endpoint:
         headers = self._headers()
         response = requests.delete(url, headers=headers)
         return response
+
+    @staticmethod
+    def check_status_code(response, expected_status):
+        assert response.status_code == expected_status
+
+    @staticmethod
+    def check_meme_data(meme, expected_data):
+        assert meme["text"] == expected_data["text"]
+        assert meme["url"] == expected_data["url"]
+        assert meme["tags"] == expected_data["tags"]
+        assert meme["info"] == expected_data["info"]

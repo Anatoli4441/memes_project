@@ -49,10 +49,12 @@ def meme_data():
 
 
 @pytest.fixture
-def meme(do_post, meme_data):
+def meme(do_post, do_delete, meme_data):
     response = do_post.add_meme(meme_data)
     assert response.status_code == 200
-    return response.json()
+    meme = response.json()
+    yield meme
+    do_delete.delete_meme(meme["id"])
 
 
 @pytest.fixture
