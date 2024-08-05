@@ -77,15 +77,8 @@ class TestMemeAPI:
         response = do_put.update_meme("3234348949493x", data)
         Endpoint.check_status_code(response, 404)
 
-    def test_delete_meme_created_by_other_user(self, do_get, do_delete):
-        response = do_get.get_all_memes()
-        Endpoint.check_status_code(response, 200)
-
-        memes = response.json().get('data', [])
-        other_meme = next((m for m in memes if m.get('updated_by') != 'Anatoliy'), None)
-        assert other_meme is not None, "No meme found created by another user"
-
-        meme_id = other_meme["id"]
+    def test_delete_meme_created_by_other_user(self, do_delete, other_user_meme):
+        meme_id = other_user_meme["id"]
         response = do_delete.delete_meme(meme_id)
         Endpoint.check_status_code(response, 403)
 
@@ -102,7 +95,7 @@ class TestMemeAPI:
     def test_add_meme_with_int_in_url(self, do_post):
         data = {
             "text": "Zoning Out Black Cat",
-            "url": 3,  # Неверный тип данных (ожидается строка)
+            "url": 3,
             "tags": ["black", "cat"],
             "info": {"colours": ["black", "red"]}
         }

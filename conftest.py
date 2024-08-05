@@ -88,3 +88,13 @@ def anatoliy_memes(authorized_do_get):
     assert response.status_code == 200
     memes = response.json().get('data', [])
     return [meme for meme in memes if meme.get('updated_by') == 'Anatoliy']
+
+
+@pytest.fixture
+def other_user_meme(authorized_do_get):
+    response = authorized_do_get.get_all_memes()
+    assert response.status_code == 200
+    memes = response.json().get('data', [])
+    other_meme = next((m for m in memes if m.get('updated_by') != 'Anatoliy'), None)
+    assert other_meme is not None, "No meme found created by another user"
+    return other_meme
