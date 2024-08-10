@@ -6,6 +6,7 @@ class Endpoint:
 
     def __init__(self, token=None):
         self.token = token
+        self.response = None  # Свойство для хранения последнего ответа
 
     def _headers(self):
         if self.token:
@@ -15,33 +16,32 @@ class Endpoint:
     def post(self, path, data):
         url = f"{self.BASE_URL}{path}"
         headers = self._headers()
-        response = requests.post(url, json=data, headers=headers)
-        return response
+        self.response = requests.post(url, json=data, headers=headers)
+        return self.response
 
     def get(self, path):
         url = f"{self.BASE_URL}{path}"
         headers = self._headers()
-        response = requests.get(url, headers=headers)
-        return response
+        self.response = requests.get(url, headers=headers)
+        return self.response
 
     def put(self, path, data):
         url = f"{self.BASE_URL}{path}"
         headers = self._headers()
-        response = requests.put(url, json=data, headers=headers)
-        return response
+        self.response = requests.put(url, json=data, headers=headers)
+        return self.response
 
     def delete(self, path):
         url = f"{self.BASE_URL}{path}"
         headers = self._headers()
-        response = requests.delete(url, headers=headers)
-        return response
+        self.response = requests.delete(url, headers=headers)
+        return self.response
 
-    @staticmethod
-    def check_status_code(response, expected_status):
-        assert response.status_code == expected_status
+    def check_status_code(self, expected_status):
+        assert self.response.status_code == expected_status
 
-    @staticmethod
-    def check_meme_data(meme, expected_data):
+    def check_meme_data(self, expected_data):
+        meme = self.response.json()
         assert meme["text"] == expected_data["text"]
         assert meme["url"] == expected_data["url"]
         assert meme["tags"] == expected_data["tags"]
