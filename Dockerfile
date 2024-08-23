@@ -1,15 +1,15 @@
-FROM jenkins/jenkins:lts
+FROM python
 
-USER root
+# Устанавливаем необходимые пакеты
+RUN apt-get update && apt-get install -y \
+    git \
+    && apt-get clean
 
-RUN apt-get update && \
-    apt-get install -y docker.io && \
-    apt-get clean
+
+COPY . /app
+WORKDIR /app
 
 
-RUN /usr/local/bin/install-plugins.sh git workflow-aggregator docker-workflow
+RUN pip install --no-cache-dir -r requirements.txt
 
-USER jenkins
-
-# Копируем файл настроек в контейнер (опционально, если хотите настроить Jenkins)
- COPY jenkins_config.xml /var/jenkins_home/config.xml
+CMD ["pytest"]
