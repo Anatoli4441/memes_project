@@ -26,7 +26,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: '3.9'  # Укажите нужную вам версию Python
+        python-version: '3.9'
 
     - name: Install dependencies
       run: |
@@ -34,46 +34,35 @@ jobs:
         . venv/bin/activate
         pip install --upgrade pip
         pip install -r requirements.txt
-        pip install allure-pytest
 
-    - name: Install Allure CLI
+    - name: Run tests
       run: |
-        sudo apt-get update -y
-        sudo apt-get install -y openjdk-11-jre
-        wget https://github.com/allure-framework/allure2/releases/download/2.24.1/allure-2.24.1.tgz
-        tar -zxvf allure-2.24.1.tgz
-        sudo mv allure-2.24.1 /opt/allure
-        sudo ln -s /opt/allure/bin/allure /usr/bin/allure
+        . venv/bin/activate
+        pytest > result.log  # Запуск тестов и сохранение вывода в файл result.log
 
-    - name: Generate report
-      run: |
-        allure generate -c allure-results -o _site  # Генерация отчета Allure в директорию _site
-
-    - name: List generated files  # Новый шаг для диагностики
-      run: |
-        ls -al _site
-
-    - name: Save allure report
-      uses: actions/upload-artifact@v4  # Использование актуальной версии действия
+    - name: Save test results
+      uses: actions/upload-artifact@v4
       with:
-        name: _site
-        path: _site
+        name: test-results
+        path: result.log
         retention-days: 1
 
   publish-report:
     name: Report publication
     runs-on: ubuntu-latest
-    needs: run-tests  # Этот шаг выполняется после успешного завершения job run-tests
+    needs: run-tests
 
     steps:
-    - name: Download artifacts
-      uses: actions/download-artifact@v3
+    - name: Download test results
+      uses: actions/download-artifact@v4
       with:
-        name: _site
-
-    - name: Upload Pages artifact
-      uses: actions/upload-pages-artifact@v2
+        name: test-results
 
     - name: Deploy to GitHub Pages
-      id: deployment
-      uses: actions/deploy-pages@v1.2.9
+      run: |
+        mkdir -p _site
+        mv result.log _site/index.html  # Перемещаем лог в папку _site и переименовываем в index.html
+      uses: actions/deploy-pages@v4
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./_site
