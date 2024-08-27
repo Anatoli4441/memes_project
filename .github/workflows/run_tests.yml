@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs: 
       deployment_target:
-        description: Choose tests set
+        description: "Choose tests set"
         required: true
         type: choice
         default: smoke
@@ -14,37 +14,65 @@ on:
           - extended
           - all
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 jobs:
   run-tests:
     runs-on: ubuntu-latest
     name: Run autotests
 
     steps:
-    - name: Checkout code
+    - name: Checkout autotests
       uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
+    - name: Set up Python environment
+      uses: actions/setup-python@v4
       with:
-        python-version: '3.9'
+        python-version: '3.10'
 
     - name: Install dependencies
-      run: |
-        python -m venv venv
-        . venv/bin/activate
-        pip install --upgrade pip
-        pip install -r requirements.txt
+      run: pip install -r requirements.txt
 
-    - name: Run tests
-      run: |
-        . venv/bin/activate
-        pytest > result.log  # Запуск тестов и сохранение вывода в файл result.log
+    - name: Run all tests
+      if: "github.event.inputs.deployment_target == 'all'"
+      run: pytest --alluredir=allure-results
+      continue-on-error: true
 
-    - name: Save test results
-      uses: actions/upload-artifact@v4  # Обновлено до актуальной версии
+    - name: Run smoke tests
+      if: "github.event.inputs.deployment_target == 'smoke'"
+      run: pytest -m smoke --alluredir=allure-results
+      continue-on-error: true
+
+    - name: Run regression tests
+      if: "github.event.inputs.deployment_target == 'regression'"
+      run: pytest -m regression --alluredir=allure-results
+      continue-on-error: true
+
+    - name: Run extended tests
+      if: "github.event.inputs.deployment_target == 'extended'"
+      run: pytest -m extended --alluredir=allure-results
+      continue-on-error: true
+
+    - name: Install Java
+      uses: actions/setup-java@v3
       with:
-        name: test-results
-        path: result.log
+        distribution: 'microsoft'
+        java-version: '17'
+
+    - name: Install Allure
+      run: sudo wget https://github.com/allure-framework/allure2/releases/download/2.24.1/allure-2.24.1.tgz -O allure2.tgz && tar -zxvf allure2.tgz && sudo mv allure-2.24.1 /opt/allure && sudo ln -s /opt/allure/bin/allure /usr/bin/allure
+
+    - name: Generate Allure report
+      run: allure generate -c allure-results -o allure-report
+
+    - name: Save Allure report
+      uses: actions/upload-artifact@v3
+      with:
+        name: allure-report
+        path: allure-report
         retention-days: 1
 
   publish-report:
@@ -53,19 +81,14 @@ jobs:
     needs: run-tests
 
     steps:
-    - name: Download test results
-      uses: actions/download-artifact@v3  # Остаемся на v3, так как v4 еще не существует
+    - name: Download artifacts
+      uses: actions/download-artifact@v3
       with:
-        name: test-results
+        name: allure-report
 
-    - name: Prepare GitHub Pages content
-      run: |
-        mkdir -p _site
-        mv result.log _site/index.html  # Перемещаем лог в папку _site и переименовываем в index.html
+    - name: Upload Pages artifact
+      uses: actions/upload-pages-artifact@v2
 
     - name: Deploy to GitHub Pages
       id: deployment
-      uses: peaceiris/actions-gh-pages@v4  # peaceiris поддерживает v4
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./_site
+      uses: actions/deploy-pages@v1.2.9
