@@ -21,10 +21,10 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3  # Updated to v3
 
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4  # Updated to v4
 
     - name: Install dependencies
       run: |
@@ -37,30 +37,30 @@ jobs:
       if: ${{ inputs.deployment_target == 'smoke' }}
       run: |
         . venv/bin/activate
-        pytest --alluredir=allure-results -m smoke  # Запуск smoke тестов
+        pytest --alluredir=allure-results -m smoke
 
     - name: Run regression tests
       if: ${{ inputs.deployment_target == 'regression' }}
       run: |
         . venv/bin/activate
-        pytest --alluredir=allure-results -m regression  # Запуск regression тестов
+        pytest --alluredir=allure-results -m regression
 
     - name: Run extended tests
       if: ${{ inputs.deployment_target == 'extended' }}
       run: |
         . venv/bin/activate
-        pytest --alluredir=allure-results -m extended  # Запуск extended тестов
+        pytest --alluredir=allure-results -m extended
 
     - name: Run all tests
       if: ${{ inputs.deployment_target == 'all' }}
       run: |
         . venv/bin/activate
-        pytest --alluredir=allure-results  # Запуск всех тестов
+        pytest --alluredir=allure-results
 
     - name: Generate Allure report
       run: |
         mkdir -p allure-report
-        allure generate allure-results -o allure-report --clean  # Генерация HTML отчетов Allure
+        allure generate allure-results -o allure-report --clean
 
     - name: Publish Allure Report
       uses: actions/upload-artifact@v2
@@ -69,7 +69,7 @@ jobs:
         path: allure-report
 
     - name: Deploy Allure Report to GitHub Pages
-      if: success()
+      if: ${{ success() }}
       uses: peaceiris/actions-gh-pages@v3
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
