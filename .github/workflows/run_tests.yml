@@ -86,9 +86,14 @@ jobs:
       with:
         name: allure-report
 
-    - name: Upload Pages artifact
-      uses: actions/upload-pages-artifact@v2
+    - name: Prepare GitHub Pages content
+      run: |
+        mkdir -p _site
+        mv allure-report/* _site/  # Перемещаем файлы отчета в _site
 
     - name: Deploy to GitHub Pages
       id: deployment
       uses: actions/deploy-pages@v1.2.9
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./_site
