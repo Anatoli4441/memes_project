@@ -34,11 +34,14 @@ jobs:
         pip install -r requirements.txt
         pip install allure-pytest  # Убедитесь, что allure-pytest установлен
 
-    - name: Install Allure
+    - name: Install Allure CLI
       run: |
         sudo apt-get update -y
         sudo apt-get install -y openjdk-11-jre  # Убедитесь, что Java установлена
-        sudo apt-get install -y allure  # Установка Allure CLI
+        wget https://github.com/allure-framework/allure2/releases/download/2.20.1/allure-2.20.1.tgz
+        tar -zxvf allure-2.20.1.tgz
+        sudo mv allure-2.20.1 /opt/allure
+        sudo ln -s /opt/allure/bin/allure /usr/bin/allure
 
     - name: Run smoke tests
       if: ${{ inputs.deployment_target == 'smoke' }}
