@@ -97,10 +97,17 @@ jobs:
       with:
         name: allure-report
 
+    - name: Verify downloaded report
+      run: |
+        if [ ! -d "allure-report" ] || [ -z "$(ls -A allure-report)" ]; then
+          echo "Downloaded allure-report is empty or does not exist"
+          exit 1
+        fi
+
     - name: Prepare GitHub Pages content
       run: |
         mkdir -p _site
-        mv allure-report/* _site/  # Перемещаем файлы отчета в _site
+        cp -r allure-report/* _site/  # Копируем файлы отчета в _site
 
     - name: Deploy to GitHub Pages
       id: deployment
