@@ -49,6 +49,10 @@ jobs:
       run: |
         allure generate -c allure-results -o _site  # Генерация отчета Allure в директорию _site
 
+    - name: List generated files  # Новый шаг для диагностики
+      run: |
+        ls -al _site
+
     - name: Save allure report
       uses: actions/upload-artifact@v4  # Использование актуальной версии действия
       with:
