@@ -59,7 +59,11 @@ jobs:
         java-version: '17'
 
     - name: Install Allure
-      run: sudo wget https://github.com/allure-framework/allure2/releases/download/2.24.1/allure-2.24.1.tgz -O allure2.tgz && tar -zxvf allure2.tgz && sudo mv allure-2.24.1 /opt/allure && sudo ln -s /opt/allure/bin/allure /usr/bin/allure
+      run: |
+        sudo wget https://github.com/allure-framework/allure2/releases/download/2.24.1/allure-2.24.1.tgz -O allure2.tgz
+        tar -zxvf allure2.tgz
+        sudo mv allure-2.24.1 /opt/allure
+        sudo ln -s /opt/allure/bin/allure /usr/bin/allure
 
     - name: Generate Allure report
       run: allure generate -c allure-results -o _site
@@ -67,7 +71,7 @@ jobs:
     - name: Save Allure report
       uses: actions/upload-artifact@v3
       with:
-        name: _site
+        name: site
         path: _site
         retention-days: 1
 
@@ -80,7 +84,7 @@ jobs:
     - name: Download artifacts
       uses: actions/download-artifact@v3
       with:
-        name: _site
+        name: site
 
     - name: Deploy to GitHub Pages
       uses: actions/deploy-pages@v1.2.9
