@@ -1,9 +1,57 @@
 name: Python autotests
-on: [push]
+
+on: 
+  workflow_dispatch:
+    inputs: 
+      deployment_target:
+        description: choose tests set
+        required: true
+        type: choice
+        default: smoke
+        options:
+          - smoke
+          - regression
+          - extended
+          - all
 
 jobs:
   run-tests:
-    runs-on: Ubuntu-latests
+    runs-on: ubuntu-latest
     name: Run autotests
+
     steps:
-    - name:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+
+    - name: Install dependencies
+      run: |
+        python -m venv venv
+        . venv/bin/activate
+        pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run tests
+      run: |
+        . venv/bin/activate
+        pytest --alluredir=allure-results  # Генерация отчетов Allure
+
+    - name: Generate Allure report
+      run: |
+        mkdir -p allure-report
+        allure generate allure-results -o allure-report --clean  # Генерация HTML отчетов Allure
+
+    - name: Publish Allure Report
+      uses: actions/upload-artifact@v2
+      with:
+        name: allure-report
+        path: allure-report
+
+    - name: Deploy Allure Report to GitHub Pages
+      if: success()
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./allure-report
