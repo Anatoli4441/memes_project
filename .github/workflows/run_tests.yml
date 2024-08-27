@@ -37,24 +37,20 @@ jobs:
       run: pip install -r requirements.txt
 
     - name: Run all tests
-      if: "github.event.inputs.deployment_target == 'all'"
+      if: github.event.inputs.deployment_target == 'all'
       run: pytest --alluredir=allure-results
-      continue-on-error: true
 
     - name: Run smoke tests
-      if: "github.event.inputs.deployment_target == 'smoke'"
+      if: github.event.inputs.deployment_target == 'smoke'
       run: pytest -m smoke --alluredir=allure-results
-      continue-on-error: true
 
     - name: Run regression tests
-      if: "github.event.inputs.deployment_target == 'regression'"
+      if: github.event.inputs.deployment_target == 'regression'
       run: pytest -m regression --alluredir=allure-results
-      continue-on-error: true
 
     - name: Run extended tests
-      if: "github.event.inputs.deployment_target == 'extended'"
+      if: github.event.inputs.deployment_target == 'extended'
       run: pytest -m extended --alluredir=allure-results
-      continue-on-error: true
 
     - name: Install Java
       uses: actions/setup-java@v3
@@ -63,27 +59,16 @@ jobs:
         java-version: '17'
 
     - name: Install Allure
-      run: |
-        sudo wget https://github.com/allure-framework/allure2/releases/download/2.24.1/allure-2.24.1.tgz -O allure2.tgz
-        tar -zxvf allure2.tgz
-        sudo mv allure-2.24.1 /opt/allure
-        sudo ln -s /opt/allure/bin/allure /usr/bin/allure
+      run: sudo wget https://github.com/allure-framework/allure2/releases/download/2.24.1/allure-2.24.1.tgz -O allure2.tgz && tar -zxvf allure2.tgz && sudo mv allure-2.24.1 /opt/allure && sudo ln -s /opt/allure/bin/allure /usr/bin/allure
 
     - name: Generate Allure report
-      run: allure generate -c allure-results -o allure-report
-
-    - name: Verify Allure report
-      run: |
-        if [ ! -d "allure-report" ] || [ -z "$(ls -A allure-report)" ]; then
-          echo "Allure report directory is empty or does not exist"
-          exit 1
-        fi
+      run: allure generate -c allure-results -o _site
 
     - name: Save Allure report
       uses: actions/upload-artifact@v3
       with:
-        name: allure-report
-        path: allure-report
+        name: _site
+        path: _site
         retention-days: 1
 
   publish-report:
@@ -95,22 +80,9 @@ jobs:
     - name: Download artifacts
       uses: actions/download-artifact@v3
       with:
-        name: allure-report
-
-    - name: Verify downloaded report
-      run: |
-        if [ ! -d "allure-report" ] || [ -z "$(ls -A allure-report)" ]; then
-          echo "Downloaded allure-report is empty or does not exist"
-          exit 1
-        fi
-
-    - name: Prepare GitHub Pages content
-      run: |
-        mkdir -p _site
-        cp -r allure-report/* _site/  # Копируем файлы отчета в _site
+        name: _site
 
     - name: Deploy to GitHub Pages
-      id: deployment
       uses: actions/deploy-pages@v1.2.9
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
