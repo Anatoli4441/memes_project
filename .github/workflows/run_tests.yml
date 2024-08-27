@@ -32,11 +32,12 @@ jobs:
         . venv/bin/activate
         pip install --upgrade pip
         pip install -r requirements.txt
-        pip install allure-pytest  # Установка allure-pytest
+        pip install allure-pytest  # Убедитесь, что allure-pytest установлен
 
     - name: Install Allure
       run: |
         sudo apt-get update -y
+        sudo apt-get install -y openjdk-11-jre  # Убедитесь, что Java установлена
         sudo apt-get install -y allure  # Установка Allure CLI
 
     - name: Run smoke tests
