@@ -21,10 +21,10 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3  # Updated to v3
+      uses: actions/checkout@v3
 
     - name: Set up Python
-      uses: actions/setup-python@v4  # Updated to v4
+      uses: actions/setup-python@v4
 
     - name: Install dependencies
       run: |
@@ -32,35 +32,41 @@ jobs:
         . venv/bin/activate
         pip install --upgrade pip
         pip install -r requirements.txt
+        pip install allure-pytest  # Установка allure-pytest
+
+    - name: Install Allure
+      run: |
+        sudo apt-get update -y
+        sudo apt-get install -y allure  # Установка Allure CLI
 
     - name: Run smoke tests
       if: ${{ inputs.deployment_target == 'smoke' }}
       run: |
         . venv/bin/activate
-        pytest --alluredir=allure-results -m smoke
+        pytest --alluredir=allure-results -m smoke  # Запуск smoke тестов
 
     - name: Run regression tests
       if: ${{ inputs.deployment_target == 'regression' }}
       run: |
         . venv/bin/activate
-        pytest --alluredir=allure-results -m regression
+        pytest --alluredir=allure-results -m regression  # Запуск regression тестов
 
     - name: Run extended tests
       if: ${{ inputs.deployment_target == 'extended' }}
       run: |
         . venv/bin/activate
-        pytest --alluredir=allure-results -m extended
+        pytest --alluredir=allure-results -m extended  # Запуск extended тестов
 
     - name: Run all tests
       if: ${{ inputs.deployment_target == 'all' }}
       run: |
         . venv/bin/activate
-        pytest --alluredir=allure-results
+        pytest --alluredir=allure-results  # Запуск всех тестов
 
     - name: Generate Allure report
       run: |
         mkdir -p allure-report
-        allure generate allure-results -o allure-report --clean
+        allure generate allure-results -o allure-report --clean  # Генерация HTML отчетов Allure
 
     - name: Publish Allure Report
       uses: actions/upload-artifact@v2
