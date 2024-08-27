@@ -1,1 +1,9 @@
+name: Python autotests
+on: [push]
 
+jobs:
+  run-tests:
+    runs-on: Ubuntu-latests
+    name: Run autotests
+    steps:
+    - name:
