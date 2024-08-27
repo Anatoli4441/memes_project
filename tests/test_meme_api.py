@@ -1,3 +1,6 @@
+import pytest
+
+
 class TestMemeAPI:
 
     @pytest.mark.smoke
