@@ -34,17 +34,30 @@ jobs:
         . venv/bin/activate
         pip install --upgrade pip
         pip install -r requirements.txt
+        pip install allure-pytest
 
-    - name: Run tests
+    - name: Install Allure CLI
       run: |
-        . venv/bin/activate
-        pytest > result.log  # Запуск тестов и сохранение вывода в файл result.log
+        sudo apt-get update -y
+        sudo apt-get install -y openjdk-11-jre
+        wget https://github.com/allure-framework/allure2/releases/download/2.24.1/allure-2.24.1.tgz
+        tar -zxvf allure-2.24.1.tgz
+        sudo mv allure-2.24.1 /opt/allure
+        sudo ln -s /opt/allure/bin/allure /usr/bin/allure
 
-    - name: Save test results
+    - name: Generate report
+      run: |
+        allure generate -c allure-results -o _site
+
+    - name: List generated files  # Проверка содержимого директории _site
+      run: |
+        ls -al _site
+
+    - name: Save allure report
       uses: actions/upload-artifact@v4
       with:
-        name: test-results
-        path: result.log
+        name: _site
+        path: _site
         retention-days: 1
 
   publish-report:
@@ -53,16 +66,14 @@ jobs:
     needs: run-tests
 
     steps:
-    - name: Download test results
-      uses: actions/download-artifact@v4
+    - name: Download artifacts
+      uses: actions/download-artifact@v4  # Обновлено до v4
       with:
-        name: test-results
+        name: _site
+
+    - name: Upload Pages artifact
+      uses: actions/upload-pages-artifact@v4  # Обновлено до v4
 
     - name: Deploy to GitHub Pages
-      run: |
-        mkdir -p _site
-        mv result.log _site/index.html  # Перемещаем лог в папку _site и переименовываем в index.html
-      uses: actions/deploy-pages@v4
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./_site
+      id: deployment
+      uses: actions/deploy-pages@v4  # Обновлено до v4
