@@ -1,4 +1,4 @@
 "Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
-"passed","Tue Aug 27 17:50:01 UTC 2024","Tue Aug 27 17:50:01 UTC 2024","387","tests","test_meme_api","TestMemeAPI","","","test_delete_meme",""
-"passed","Tue Aug 27 17:50:00 UTC 2024","Tue Aug 27 17:50:00 UTC 2024","182","tests","test_meme_api","TestMemeAPI","","","test_authorization",""
-"passed","Tue Aug 27 17:50:01 UTC 2024","Tue Aug 27 17:50:01 UTC 2024","191","tests","test_meme_api","TestMemeAPI","","","test_add_meme",""
+"passed","Tue Aug 27 17:51:10 UTC 2024","Tue Aug 27 17:51:10 UTC 2024","184","tests","test_meme_api","TestMemeAPI","","","test_valid_token",""
+"passed","Tue Aug 27 17:51:10 UTC 2024","Tue Aug 27 17:51:11 UTC 2024","934","tests","test_meme_api","TestMemeAPI","","","test_get_all_memes",""
+"passed","Tue Aug 27 17:51:12 UTC 2024","Tue Aug 27 17:51:12 UTC 2024","183","tests","test_meme_api","TestMemeAPI","","","test_get_meme_by_id",""
