@@ -34,30 +34,17 @@ jobs:
         . venv/bin/activate
         pip install --upgrade pip
         pip install -r requirements.txt
-        pip install allure-pytest
 
-    - name: Install Allure CLI
+    - name: Run tests
       run: |
-        sudo apt-get update -y
-        sudo apt-get install -y openjdk-11-jre
-        wget https://github.com/allure-framework/allure2/releases/download/2.24.1/allure-2.24.1.tgz
-        tar -zxvf allure-2.24.1.tgz
-        sudo mv allure-2.24.1 /opt/allure
-        sudo ln -s /opt/allure/bin/allure /usr/bin/allure
+        . venv/bin/activate
+        pytest > result.log  # Запуск тестов и сохранение вывода в файл result.log
 
-    - name: Generate report
-      run: |
-        allure generate -c allure-results -o _site
-
-    - name: List generated files  # Проверка содержимого директории _site
-      run: |
-        ls -al _site
-
-    - name: Save allure report
-      uses: actions/upload-artifact@v4
+    - name: Save test results
+      uses: actions/upload-artifact@v4  # Обновлено до актуальной версии
       with:
-        name: _site
-        path: _site
+        name: test-results
+        path: result.log
         retention-days: 1
 
   publish-report:
@@ -66,14 +53,19 @@ jobs:
     needs: run-tests
 
     steps:
-    - name: Download artifacts
-      uses: actions/download-artifact@v4  # Обновлено до v4
+    - name: Download test results
+      uses: actions/download-artifact@v3  # Остаемся на v3, так как v4 еще не существует
       with:
-        name: _site
+        name: test-results
 
-    - name: Upload Pages artifact
-      uses: actions/upload-pages-artifact@v4  # Обновлено до v4
+    - name: Prepare GitHub Pages content
+      run: |
+        mkdir -p _site
+        mv result.log _site/index.html  # Перемещаем лог в папку _site и переименовываем в index.html
 
     - name: Deploy to GitHub Pages
       id: deployment
-      uses: actions/deploy-pages@v4  # Обновлено до v4
+      uses: peaceiris/actions-gh-pages@v4  # peaceiris поддерживает v4
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./_site
